@@ -133,16 +133,61 @@ class KnowledgeBase(object):
     def kb_explain(self, fact_or_rule):
         """
         Explain where the fact or rule comes from
-
         Args:
             fact_or_rule (Fact or Rule) - Fact or rule to be explained
-
         Returns:
             string explaining hierarchical support from other Facts and rules
         """
         ####################################################
         # Student code goes here
+        if isinstance(fact_or_rule, Fact) or isinstance(fact_or_rule, Rule):
+            kb_fact_or_rule = None
+            if isinstance(fact_or_rule, Fact):
+                kb_fact_or_rule = self._get_fact(fact_or_rule)
+                if not kb_fact_or_rule: 
+                    return("Fact is not in the KB")
+            if isinstance(fact_or_rule, Rule):
+                kb_fact_or_rule = self._get_rule(fact_or_rule)
+                if not kb_fact_or_rule: 
+                    return("Rule is not in the KB")
+            return self.explain_fact_or_rule(kb_fact_or_rule, '')
+        else:
+            return False
 
+    def explain_fact_or_rule(self, fact_or_rule, spaces):
+        explanation = spaces
+        if isinstance(fact_or_rule, Fact):
+            explanation += "fact: " + str(fact_or_rule.statement)
+
+            if fact_or_rule.asserted == True:
+                explanation += " ASSERTED"
+            explanation += '\n'
+
+            for support in fact_or_rule.supported_by:
+                explanation += spaces + "  SUPPORTED BY" +'\n' 
+                for fact_rule in support:
+                    explanation += self.explain_fact_or_rule(fact_rule, spaces + '    ')
+
+        if isinstance(fact_or_rule, Rule):
+            explanation += "rule: ("
+
+            for x in range(0, len(fact_or_rule.lhs)):
+                explanation += str(fact_or_rule.lhs[x])
+                if x != len(fact_or_rule.lhs) - 1:
+                    explanation += ", "
+
+            explanation += ") -> " + str(fact_or_rule.rhs)
+
+            if fact_or_rule.asserted == True:
+                explanation += " ASSERTED"
+            explanation += '\n'
+
+            for support in fact_or_rule.supported_by:
+                explanation += spaces + "  SUPPORTED BY" + '\n' 
+                for fact_rule in support:
+                    explanation += self.explain_fact_or_rule(fact_rule, spaces + '    ')
+
+        return explanation
 
 class InferenceEngine(object):
     def fc_infer(self, fact, rule, kb):
